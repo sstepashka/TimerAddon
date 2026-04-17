@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.0",
+  "minecraft:block": {
+    "description": {
+      "identifier": "custom:timer",
+      "menu_category": { "category": "items" },
+      "states": {
+        "custom:is_active": [false, true],
+        "custom:is_finished": [false, true]
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": { "seconds_to_destroy": 0.5 },
+      "minecraft:redstone_conductivity": {
+        "allows_wire_to_step_down": true,
+        "redstone_receiver": { "provides_redstone_signal": false }
+      }
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('custom:is_finished') == true",
+        "components": {
+          "minecraft:redstone_conductivity": {
+            "redstone_transmitter": { "redstone_signal_strength": 15 }
+          },
+          "minecraft:light_emission": 5
+        }
+      }
+    ]
+  }
+}
