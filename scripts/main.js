@@ -1,47 +1,73 @@
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 
-const TIMER_DURATION = 100; // Default 5 seconds (20 ticks = 1s)
+const TIMER_DURATIONS = [100, 200, 600]; // 5s, 10s, 30s in ticks
+const PULSE_DURATION = 20; // 1 second output pulse
+
+// In-memory map: locationKey -> { startTick, duration, pulseStart? }
+const activeTimers = new Map();
+
+function locationKey(block) {
+    const { x, y, z } = block.location;
+    return `${block.dimension.id}:${x},${y},${z}`;
+}
 
 world.beforeEvents.worldInitialize.subscribe((initEvent) => {
     initEvent.blockComponentRegistry.registerCustomComponent("custom:timer_logic", {
-        onTick: (event) => {
-            const { block } = event;
+        onTick: ({ block }) => {
+            const key = locationKey(block);
             const isActive = block.permutation.getState("custom:is_active");
-            
-            // Logic: If powered by redstone and not already active, start countdown
-            if (block.getRedstonePower() > 0 && !isActive) {
+            const isFinished = block.permutation.getState("custom:is_finished");
+            const powered = (block.getRedstonePower() ?? 0) > 0;
+
+            if (!isActive && !isFinished && powered) {
+                // Start countdown
+                const duration = activeTimers.get(key)?.duration ?? 100;
+                activeTimers.set(key, { startTick: system.currentTick, duration });
                 block.setPermutation(block.permutation.withState("custom:is_active", true));
-                
-                system.runTimeout(() => {
-                    // When time finishes, set finished state to true
+
+            } else if (isActive && !isFinished) {
+                // Check if countdown elapsed
+                const data = activeTimers.get(key);
+                if (data && system.currentTick - data.startTick >= data.duration) {
                     block.setPermutation(block.permutation.withState("custom:is_finished", true));
-                    
-                    // Reset after a brief pulse (e.g., 2 seconds)
-                    system.runTimeout(() => {
-                        block.setPermutation(block.permutation.withState("custom:is_active", false));
-                        block.setPermutation(block.permutation.withState("custom:is_finished", false));
-                    }, 40); 
-                }, TIMER_DURATION);
+                    activeTimers.set(key, { ...data, pulseStart: system.currentTick });
+                }
+
+            } else if (isActive && isFinished) {
+                // Auto-reset after pulse
+                const data = activeTimers.get(key);
+                if (data?.pulseStart !== undefined && system.currentTick - data.pulseStart >= PULSE_DURATION) {
+                    const duration = data.duration;
+                    activeTimers.set(key, { duration }); // preserve setting, clear run state
+                    block.setPermutation(block.permutation
+                        .withState("custom:is_active", false)
+                        .withState("custom:is_finished", false));
+                }
             }
-        }
-    });
-});
+        },
 
-// Optional: UI to set time when interacting with the block
-world.beforeEvents.itemUseOn.subscribe((event) => {
-    if (event.block.typeId === "custom:timer") {
-        system.run(() => {
-            const player = event.source;
-            const form = new ActionFormData()
-                .title("Set Timer")
-                .button("5 Seconds")
-                .button("10 Seconds")
-                .button("30 Seconds");
+        onPlayerInteract: ({ block, player }) => {
+            if (!player) return;
+            const key = locationKey(block);
 
-            form.show(player).then((response) => {
-                if (response.selection === 0) /* Set dynamic property logic here */;
+            system.run(() => {
+                new ActionFormData()
+                    .title("Set Timer Duration")
+                    .button("5 Seconds")
+                    .button("10 Seconds")
+                    .button("30 Seconds")
+                    .show(player)
+                    .then((response) => {
+                        if (response.canceled || response.selection === undefined) return;
+                        const existing = activeTimers.get(key) ?? {};
+                        activeTimers.set(key, { ...existing, duration: TIMER_DURATIONS[response.selection] });
+                    });
             });
-        });
-    }
+        },
+
+        onPlayerDestroy: ({ block }) => {
+            activeTimers.delete(locationKey(block));
+        },
+    });
 });

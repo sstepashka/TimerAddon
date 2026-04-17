@@ -1,5 +1,5 @@
 {
-  "format_version": "1.20.0",
+  "format_version": "1.21.0",
   "minecraft:block": {
     "description": {
       "identifier": "custom:timer",
@@ -10,6 +10,8 @@
       }
     },
     "components": {
+      "minecraft:custom_components": ["custom:timer_logic"],
+      "minecraft:tick": {},
       "minecraft:destructible_by_mining": { "seconds_to_destroy": 0.5 },
       "minecraft:redstone_conductivity": {
         "allows_wire_to_step_down": true,
@@ -20,10 +22,11 @@
       {
         "condition": "q.block_state('custom:is_finished') == true",
         "components": {
+          "minecraft:light_emission": 5,
           "minecraft:redstone_conductivity": {
+            "allows_wire_to_step_down": true,
             "redstone_transmitter": { "redstone_signal_strength": 15 }
-          },
-          "minecraft:light_emission": 5
+          }
         }
       }
     ]
