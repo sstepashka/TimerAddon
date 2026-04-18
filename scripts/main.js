@@ -14,11 +14,6 @@ function locationKey(block) {
 
 world.beforeEvents.worldInitialize.subscribe((initEvent) => {
     initEvent.blockComponentRegistry.registerCustomComponent("custom:timer_logic", {
-        onRedstoneUpdate: (arg) => {
-            const { block, newValue, oldValue } = arg;
-            console.warn(`[onRedstoneUpdate] Block: ${locationKey(block)}, Old: ${oldValue}, New: ${newValue}`);
-        },
-
         onTick: (arg) => {
             const { block } = arg;
             const key = locationKey(block);
@@ -26,25 +21,29 @@ world.beforeEvents.worldInitialize.subscribe((initEvent) => {
             const isFinished = block.permutation.getState("custom:is_finished");
 
             // Redstone detection
-            let powerLevel = block.getRedstonePower();
-            const powered = (powerLevel ?? 0) > 0;
+            let powerLevel = block.getRedstonePower() ?? 0;
+            if (powerLevel === 0) {
+                const consumer = block.getComponent("minecraft:redstone_consumer");
+                if (consumer) powerLevel = consumer.value ?? 0;
+            }
+            const powered = powerLevel > 0;
 
-            if (system.currentTick % 20 === 0 || (powered && !isActive)) {
-                console.warn(`[onTick] Block: ${key}, isActive: ${isActive}, isFinished: ${isFinished}, powered: ${powered}, power: ${powerLevel}`);
+            if (system.currentTick % 20 === 0) {
+                console.warn(`[onTick] ${key} - Active: ${isActive}, Finished: ${isFinished}, Power: ${powerLevel}`);
             }
 
             if (!isActive && !isFinished && powered) {
                 const duration = activeTimers.get(key)?.duration ?? 100;
                 activeTimers.set(key, { startTick: system.currentTick, duration });
                 block.setPermutation(block.permutation.withState("custom:is_active", true));
-                console.warn(`Timer triggered at ${key}. Duration: ${duration / 20}s`);
+                console.warn(`Timer STARTED at ${key}. Duration: ${duration / 20}s`);
 
             } else if (isActive && !isFinished) {
                 const data = activeTimers.get(key);
                 if (data && system.currentTick - data.startTick >= data.duration) {
                     block.setPermutation(block.permutation.withState("custom:is_finished", true));
                     activeTimers.set(key, { ...data, pulseStart: system.currentTick });
-                    console.warn(`Timer finished at ${key}. Emitting pulse.`);
+                    console.warn(`Timer FINISHED at ${key}. Emitting pulse.`);
                 }
 
             } else if (isActive && isFinished) {
@@ -55,6 +54,7 @@ world.beforeEvents.worldInitialize.subscribe((initEvent) => {
                     block.setPermutation(block.permutation
                         .withState("custom:is_active", false)
                         .withState("custom:is_finished", false));
+                    console.warn(`Timer RESET at ${key}.`);
                 }
             }
         },
@@ -74,10 +74,9 @@ world.beforeEvents.worldInitialize.subscribe((initEvent) => {
                     .then((response) => {
                         if (response.canceled || response.selection === undefined) return;
                         const duration = TIMER_DURATIONS[response.selection];
-                        const existing = activeTimers.get(key) ?? {};
-                        activeTimers.set(key, { ...existing, duration });
+                        activeTimers.set(key, { duration });
 
-                        const message = `Timer set to ${duration / 20} seconds for block at ${key}`;
+                        const message = `Timer set to ${duration / 20}s for block at ${key}`;
                         console.warn(message);
                         player.sendMessage(message);
                     });

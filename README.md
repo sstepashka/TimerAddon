@@ -33,3 +33,11 @@ After editing `scripts/main.js` or any pack files, you can apply changes without
 3. The scripting engine will restart and pick up the updated files.
 
 > **Note:** `/reload` only reloads scripts. Changes to block definitions (`blocks/timer.json`) or `manifest.json` require fully closing and reopening the world.
+
+## Requirements
+
+1. Start the time when it has input signal.
+2. It will not turn off when signal is gone.
+3. When timer is finished, it send signal from the output side for 3 seconds.
+4. Can we use slider for the timer?
+5. By default, the timer is not active and the bock doesn't produce any signal.

@@ -1,10 +1,10 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Redstone Timer Add-on v10",
+    "name": "Redstone Timer Add-on v13",
     "description": "A block that counts down and emits redstone.",
     "uuid": "4d8f2a1e-7b3c-4f9a-8e2d-1c6b5a4f3e2d",
-    "version": [1, 0, 9],
+    "version": [1, 0, 12],
     "min_engine_version": [1, 21, 10]
   },
   "modules": [
