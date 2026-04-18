@@ -1,11 +1,11 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Redstone Timer Add-on",
+    "name": "Redstone Timer Add-on v10",
     "description": "A block that counts down and emits redstone.",
     "uuid": "4d8f2a1e-7b3c-4f9a-8e2d-1c6b5a4f3e2d",
-    "version": [1, 0, 0],
-    "min_engine_version": [1, 21, 0]
+    "version": [1, 0, 9],
+    "min_engine_version": [1, 21, 10]
   },
   "modules": [
     {
@@ -24,7 +24,7 @@
     }
   ],
   "dependencies": [
-    { "module_name": "@minecraft/server", "version": "1.10.0" },
+    { "module_name": "@minecraft/server", "version": "1.13.0" },
     { "module_name": "@minecraft/server-ui", "version": "1.2.0" }
   ]
 }

@@ -1,21 +1,38 @@
 {
-  "format_version": "1.21.0",
+  "format_version": "1.21.10",
   "minecraft:block": {
     "description": {
       "identifier": "custom:timer",
-      "menu_category": { "category": "items" },
+      "menu_category": {
+        "category": "construction",
+        "group": "itemGroup.name.redstone"
+      },
       "states": {
         "custom:is_active": [false, true],
         "custom:is_finished": [false, true]
       }
     },
     "components": {
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "planks",
+          "render_method": "opaque"
+        }
+      },
       "minecraft:custom_components": ["custom:timer_logic"],
-      "minecraft:tick": {},
-      "minecraft:destructible_by_mining": { "seconds_to_destroy": 0.5 },
+      "minecraft:tick": {
+        "interval_range": [1, 1]
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.5
+      },
       "minecraft:redstone_conductivity": {
         "allows_wire_to_step_down": true,
-        "redstone_receiver": { "provides_redstone_signal": false }
+        "redstone_conductor": true
+      },
+      "minecraft:redstone_consumer": {
+        "min_power": 1
       }
     },
     "permutations": [
@@ -23,9 +40,8 @@
         "condition": "q.block_state('custom:is_finished') == true",
         "components": {
           "minecraft:light_emission": 5,
-          "minecraft:redstone_conductivity": {
-            "allows_wire_to_step_down": true,
-            "redstone_transmitter": { "redstone_signal_strength": 15 }
+          "minecraft:redstone_producer": {
+            "power": 15
           }
         }
       }
